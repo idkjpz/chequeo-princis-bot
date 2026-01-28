@@ -75,6 +75,10 @@
                     </div>
                 </div>
                 <div class="action-group">
+                    <button id="tiempoRealBtn" class="btn-accent" title="Ver principales en tiempo real">
+                        <span class="icon">🔴</span>
+                        Tiempo Real
+                    </button>
                     <button id="clearAllBtn" class="btn-secondary" title="Desmarcar todos">
                         <span class="icon">🗑️</span>
                         Limpiar Todo
@@ -422,9 +426,72 @@
         </div>
     </div>
 
+    <!-- Tiempo Real Section -->
+    <div id="tiempoRealSection" class="tiempo-real-section" style="display: none;">
+        <div class="tiempo-real-header">
+            <div class="section-title">
+                <h2>🔴 Principales - Tiempo Real</h2>
+                <button id="refreshTiempoReal" class="btn-refresh" title="Actualizar">🔄</button>
+            </div>
+
+            <div class="tiempo-real-summary">
+                <div class="summary-badge status-activo">
+                    <span class="badge-emoji">✅</span>
+                    <div class="badge-info">
+                        <span class="badge-count" id="countActivo">0</span>
+                        <span class="badge-label">Activos</span>
+                    </div>
+                </div>
+                <div class="summary-badge status-desconectado">
+                    <span class="badge-emoji">🔴</span>
+                    <div class="badge-info">
+                        <span class="badge-count" id="countDesconectado">0</span>
+                        <span class="badge-label">Desconectados</span>
+                    </div>
+                </div>
+                <div class="summary-badge status-crm">
+                    <span class="badge-emoji">⚠️</span>
+                    <div class="badge-info">
+                        <span class="badge-count" id="countCrm">0</span>
+                        <span class="badge-label">En CRM</span>
+                    </div>
+                </div>
+                <div class="summary-badge status-server">
+                    <span class="badge-emoji">🔧</span>
+                    <div class="badge-info">
+                        <span class="badge-count" id="countServer">0</span>
+                        <span class="badge-label">En Server</span>
+                    </div>
+                </div>
+                <div class="summary-badge status-none">
+                    <span class="badge-emoji">⚪</span>
+                    <div class="badge-info">
+                        <span class="badge-count" id="countNone">0</span>
+                        <span class="badge-label">Sin chequear</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tiempo-real-filters">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="activo">✅ Activos</button>
+                <button class="filter-btn" data-filter="desconectado">🔴 Desconectados</button>
+                <button class="filter-btn" data-filter="crm">⚠️ En CRM</button>
+                <button class="filter-btn" data-filter="server">🔧 En Server</button>
+                <button class="filter-btn" data-filter="none">⚪ Sin chequear</button>
+            </div>
+        </div>
+
+        <div id="tiempoRealList" class="tiempo-real-list">
+            <!-- Principal cards will be rendered here by JavaScript -->
+            <div class="loading-tiempo-real">Cargando principales...</div>
+        </div>
+    </div>
+
     <script src="auth-client.js"></script>
     <script src="themes.js"></script>
     <script src="chat-functions.js"></script>
+    <script src="tiempo-real.js"></script>
     <script src="app.js"></script>
     <script src="app-admin.js"></script>
 </body>

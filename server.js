@@ -651,7 +651,116 @@ function formatDate(dateString) {
     return date.toLocaleDateString('es-ES', options);
 }
 
-// Start server
+// ==========================================
+// TIEMPO REAL - API ENDPOINTS
+// ==========================================
+
+const TIEMPO_REAL_FILE = path.join(__dirname, 'data', 'principales-tiempo-real.json');
+
+// Initialize tiempo-real file if it doesn't exist
+async function initializeTiempoReal() {
+    try {
+        await fs.access(TIEMPO_REAL_FILE);
+    } catch {
+        await fs.writeFile(TIEMPO_REAL_FILE, '{}');
+        console.log('✅ Created principales-tiempo-real.json');
+    }
+}
+
+initializeTiempoReal();
+
+// GET all real-time principals
+app.get('/api/tiempo-real', auth.middleware(), async (req, res) => {
+    try {
+        const data = await fs.readFile(TIEMPO_REAL_FILE, 'utf-8');
+        res.json(JSON.parse(data));
+    } catch (error) {
+        console.error('Error reading tiempo-real data:', error);
+        res.status(500).json({ error: 'Error reading data' });
+    }
+});
+
+// GET specific principal
+app.get('/api/tiempo-real/:phone', auth.middleware(), async (req, res) => {
+    try {
+        const phone = req.params.phone;
+        const data = JSON.parse(await fs.readFile(TIEMPO_REAL_FILE, 'utf-8'));
+
+        if (data[phone]) {
+            res.json(data[phone]);
+        } else {
+            res.json({
+                phone: parseInt(phone),
+                status: 'none',
+                mensaje: '',
+                updatedBy: '',
+                timestamp: null
+            });
+        }
+    } catch (error) {
+        console.error('Error reading principal data:', error);
+        res.status(500).json({ error: 'Error reading data' });
+    }
+});
+
+// POST update principal status
+app.post('/api/tiempo-real/:phone', auth.middleware(), async (req, res) => {
+    try {
+        const phone = req.params.phone;
+        const { status, mensaje = '', updatedBy = 'web' } = req.body;
+
+        const phoneNum = parseInt(phone);
+        if (isNaN(phoneNum) || phoneNum < 1 || phoneNum > 26) {
+            return res.status(400).json({ error: 'Invalid phone number (1-26)' });
+        }
+
+        const validStatuses = ['activo', 'desconectado', 'crm', 'server', 'none'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
+
+        const data = JSON.parse(await fs.readFile(TIEMPO_REAL_FILE, 'utf-8'));
+
+        data[phone] = {
+            phone: phoneNum,
+            status,
+            mensaje,
+            updatedBy,
+            timestamp: new Date().toISOString()
+        };
+
+        await fs.writeFile(TIEMPO_REAL_FILE, JSON.stringify(data, null, 2));
+
+        console.log(`✅ Principal #${phone} updated to ${status} by ${updatedBy}`);
+        res.json({ success: true, data: data[phone] });
+    } catch (error) {
+        console.error('Error updating principal:', error);
+        res.status(500).json({ error: 'Error updating data' });
+    }
+});
+
+// DELETE principal status
+app.delete('/api/tiempo-real/:phone', auth.middleware(), async (req, res) => {
+    try {
+        const phone = req.params.phone;
+        const data = JSON.parse(await fs.readFile(TIEMPO_REAL_FILE, 'utf-8'));
+
+        delete data[phone];
+
+        await fs.writeFile(TIEMPO_REAL_FILE, JSON.stringify(data, null, 2));
+
+        console.log(`✅ Principal #${phone} cleared`);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing principal:', error);
+        res.status(500).json({ error: 'Error clearing data' });
+    }
+});
+
+// ==========================================
+// START SERVER
+// ==========================================
+
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📱 Phone Monitoring System is ready!`);

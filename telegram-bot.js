@@ -40,6 +40,7 @@ class TelegramBot {
             }
 
             console.log('✅ Telegram bot initialized');
+            await this.setBotCommands();
             this.isPolling = true;
             return true;
         } catch (error) {
@@ -53,6 +54,26 @@ class TelegramBot {
     stopPolling() {
         this.isPolling = false;
         console.log('⏸️ Stopped Telegram polling');
+    }
+
+    async setBotCommands() {
+        console.log('🔧 Setting bot commands...');
+        const commands = [
+            { command: 'start', description: '🏠 Iniciar bot' },
+            { command: 'help', description: '❓ Ver ayuda y comandos' },
+            { command: 'cambiar', description: '🔴 Tiempo Real: Cambiar estado' },
+            { command: 'estado', description: '📊 Tiempo Real: Ver estados' },
+            { command: 'limpiar', description: '🧹 Tiempo Real: Limpiar estado' },
+            { command: 'status', description: '📈 Resumen de chequeos del día' },
+            { command: 'reporte', description: '🚨 Reportar a Discord' }
+        ];
+
+        try {
+            await axios.post(`${this.baseUrl}/setMyCommands`, { commands });
+            console.log('✅ Bot commands registered successfully');
+        } catch (error) {
+            console.error('⚠️ Error setting bot commands:', error.message);
+        }
     }
 
     // Poll for updates
@@ -98,7 +119,7 @@ class TelegramBot {
 
         // Only process messages from configured chat
         if (chatId.toString() !== this.chatId.toString()) {
-            console.log(`⚠️ Ignoring message from chat ${chatId} (expected ${this.chatId})`);
+            console.log(`⚠️ Ignoring message from chat ${chatId} (expected ${this.chatId}). If this is your group, update TELEGRAM_CHAT_ID in .env`);
             return;
         }
 
@@ -176,10 +197,16 @@ class TelegramBot {
 
             case '/help':
                 const helpText = `📱 <b>Comandos disponibles:</b>\n\n` +
-                    `/status - Ver resumen de estados actuales\n` +
-                    `/reporte [número] [mensaje] - Reportar un principal específico a Discord\n` +
-                    `  Ejemplo: /reporte 17 está en revisión\n` +
-                    `/limpiar - Limpiar todas las selecciones\n` +
+                    `<b>🔴 Tiempo Real:</b>\n` +
+                    `/cambiar [número] [estado] - Cambiar estado de un principal\n` +
+                    `  Estados: activo, desconectado, crm, server\n` +
+                    `  Ejemplo: /cambiar 17 activo\n` +
+                    `/estado - Ver todos los principales en tiempo real\n` +
+                    `/estado [número] - Ver un principal específico\n` +
+                    `/limpiar [número] - Limpiar estado de un principal\n\n` +
+                    `<b>📊 Otros:</b>\n` +
+                    `/status - Ver resumen de chequeos del día\n` +
+                    `/reporte [número] [mensaje] - Reportar a Discord\n` +
                     `/help - Mostrar este mensaje`;
                 await this.sendMessage(helpText, chatId);
                 break;
@@ -204,8 +231,44 @@ class TelegramBot {
                 }
                 break;
 
+            case '/cambiar':
+                const cambiarArgs = command.split(' ').slice(1);
+                if (cambiarArgs.length >= 2) {
+                    await this.handleCambiarCommand(cambiarArgs, chatId);
+                } else {
+                    await this.sendMessage('🔄 <b>Uso del comando:</b>\n\n' +
+                        '/cambiar [número] [estado] [mensaje opcional]\n\n' +
+                        '<b>Estados válidos:</b>\n' +
+                        '• activo\n' +
+                        '• desconectado\n' +
+                        '• crm\n' +
+                        '• server\n\n' +
+                        '<b>Ejemplos:</b>\n' +
+                        '• /cambiar 17 activo\n' +
+                        '• /cambiar 5 desconectado no responde\n' +
+                        '• /cambiar 12 crm problema', chatId);
+                }
+                break;
+
+            case '/estado':
+                const estadoArgs = command.split(' ').slice(1);
+                if (estadoArgs.length > 0) {
+                    await this.handleEstadoCommand(estadoArgs[0], chatId);
+                } else {
+                    await this.handleEstadoCommand(null, chatId);
+                }
+                break;
+
             case '/limpiar':
-                await this.sendMessage('⚠️ Para limpiar los datos, usa el botón "Limpiar Todo" en la aplicación web.', chatId);
+                const limpiarArgs = command.split(' ').slice(1);
+                if (limpiarArgs.length > 0) {
+                    await this.handleLimpiarCommand(limpiarArgs[0], chatId);
+                } else {
+                    await this.sendMessage('🧹 <b>Uso del comando:</b>\n\n' +
+                        '/limpiar [número]\n\n' +
+                        '<b>Ejemplo:</b>\n' +
+                        '• /limpiar 17', chatId);
+                }
                 break;
 
             default:
@@ -219,8 +282,8 @@ class TelegramBot {
 
         if (lowerText.includes('hola') || lowerText.includes('buenos días') || lowerText.includes('buenas tardes')) {
             await this.sendMessage('¡Hola! 👋 ¿En qué puedo ayudarte?', chatId);
-        } else if (lowerText.includes('ayuda')) {
-            await this.sendMessage('Usa /help para ver todos los comandos disponibles.', chatId);
+        } else if (lowerText.includes('ayuda') || lowerText.includes('menu') || lowerText.includes('menú')) {
+            await this.sendMessage('📱 <b>Menú de Ayuda</b>\n\nUsa /help para ver todos los comandos disponibles.', chatId);
         } else if (lowerText.includes('estado')) {
             await this.sendStatusSummary(chatId);
         }
@@ -366,6 +429,236 @@ class TelegramBot {
             console.error('Error in handleReporteCommand:', error);
             await this.sendMessage('❌ Error al enviar el reporte. Intenta nuevamente.', chatId);
         }
+    }
+
+    // Handle /cambiar command
+    async handleCambiarCommand(args, chatId) {
+        try {
+            const principalNum = parseInt(args[0]);
+            const status = args[1].toLowerCase();
+            const mensaje = args.slice(2).join(' ');
+
+            // Validate principal number
+            if (isNaN(principalNum) || principalNum < 1 || principalNum > 26) {
+                await this.sendMessage('❌ Número de principal inválido. Usa un número entre 1 y 26.', chatId);
+                return;
+            }
+
+            // Validate status
+            const validStatuses = ['activo', 'desconectado', 'crm', 'server'];
+            if (!validStatuses.includes(status)) {
+                await this.sendMessage('❌ Estado inválido. Usa: activo, desconectado, crm, o server', chatId);
+                return;
+            }
+
+            // Read current data
+            const fsPromises = require('fs').promises;
+            const dataPath = path.join(__dirname, 'data', 'principales-tiempo-real.json');
+            let data = {};
+
+            try {
+                const fileContent = await fsPromises.readFile(dataPath, 'utf-8');
+                data = JSON.parse(fileContent);
+            } catch (error) {
+                // File doesn't exist or is empty, start with empty object
+            }
+
+            // Update principal
+            data[principalNum] = {
+                phone: principalNum,
+                status,
+                mensaje,
+                updatedBy: 'Telegram',
+                timestamp: new Date().toISOString()
+            };
+
+            // Save
+            await fsPromises.writeFile(dataPath, JSON.stringify(data, null, 2));
+
+            // Status emoji map
+            const statusEmoji = {
+                'activo': '✅',
+                'desconectado': '🔴',
+                'crm': '⚠️',
+                'server': '🔧'
+            };
+
+            const emoji = statusEmoji[status] || '📱';
+            const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+
+            let response = `${emoji} <b>Principal #${principalNum} actualizado</b>\n\n`;
+            response += `Estado: ${statusText}`;
+            if (mensaje) {
+                response += `\nMensaje: ${mensaje}`;
+            }
+
+            await this.sendMessage(response, chatId);
+
+        } catch (error) {
+            console.error('Error in handleCambiarCommand:', error);
+            await this.sendMessage('❌ Error al cambiar el estado. Intenta nuevamente.', chatId);
+        }
+    }
+
+    // Handle /estado command
+    async handleEstadoCommand(phone, chatId) {
+        try {
+            const fsPromises = require('fs').promises;
+            const dataPath = path.join(__dirname, 'data', 'principales-tiempo-real.json');
+            let data = {};
+
+            try {
+                const fileContent = await fsPromises.readFile(dataPath, 'utf-8');
+                data = JSON.parse(fileContent);
+            } catch (error) {
+                // File doesn't exist or is empty
+            }
+
+            // If specific phone requested
+            if (phone) {
+                const principalNum = parseInt(phone);
+                if (isNaN(principalNum) || principalNum < 1 || principalNum > 26) {
+                    await this.sendMessage('❌ Número de principal inválido. Usa un número entre 1 y 26.', chatId);
+                    return;
+                }
+
+                const principal = data[principalNum];
+                if (!principal || principal.status === 'none') {
+                    await this.sendMessage(`📱 <b>Principal #${principalNum}</b>\n\n⚪ Sin chequear`, chatId);
+                    return;
+                }
+
+                const statusEmoji = {
+                    'activo': '✅',
+                    'desconectado': '🔴',
+                    'crm': '⚠️',
+                    'server': '🔧'
+                };
+
+                const emoji = statusEmoji[principal.status] || '📱';
+                const statusText = principal.status.charAt(0).toUpperCase() + principal.status.slice(1);
+                const timeAgo = this.getTimeAgo(principal.timestamp);
+
+                let response = `📱 <b>Principal #${principalNum}</b>\n\n`;
+                response += `${emoji} ${statusText}\n`;
+                if (principal.mensaje) {
+                    response += `💬 ${principal.mensaje}\n`;
+                }
+                response += `⏱️ ${timeAgo}\n`;
+                response += `👤 Por: ${principal.updatedBy}`;
+
+                await this.sendMessage(response, chatId);
+                return;
+            }
+
+            // Show all principals
+            const statusCount = { activo: 0, desconectado: 0, crm: 0, server: 0, none: 0 };
+
+            // Count statuses
+            for (let i = 1; i <= 26; i++) {
+                const principal = data[i];
+                if (principal && principal.status) {
+                    statusCount[principal.status]++;
+                } else {
+                    statusCount.none++;
+                }
+            }
+
+            let response = `🔴 <b>PRINCIPALES - TIEMPO REAL</b>\n\n`;
+            response += `📊 <b>Resumen:</b>\n`;
+            response += `✅ Activos: ${statusCount.activo}\n`;
+            response += `🔴 Desconectados: ${statusCount.desconectado}\n`;
+            response += `⚠️ En CRM: ${statusCount.crm}\n`;
+            response += `🔧 En Server: ${statusCount.server}\n`;
+            response += `⚪ Sin chequear: ${statusCount.none}\n\n`;
+
+            // Show principals with issues (not activo or none)
+            const problematicos = [];
+            for (let i = 1; i <= 26; i++) {
+                const principal = data[i];
+                if (principal && principal.status && principal.status !== 'activo' && principal.status !== 'none') {
+                    problematicos.push(principal);
+                }
+            }
+
+            if (problematicos.length > 0) {
+                response += `<b>⚠️ Principales con problemas:</b>\n`;
+                problematicos.forEach(p => {
+                    const statusEmoji = {
+                        'desconectado': '🔴',
+                        'crm': '⚠️',
+                        'server': '🔧'
+                    };
+                    const emoji = statusEmoji[p.status] || '📱';
+                    const timeAgo = this.getTimeAgo(p.timestamp);
+                    response += `${emoji} #${p.phone} - ${p.status} (${timeAgo})\n`;
+                });
+            } else {
+                response += `✅ <b>No hay principales con problemas</b>`;
+            }
+
+            await this.sendMessage(response, chatId);
+
+        } catch (error) {
+            console.error('Error in handleEstadoCommand:', error);
+            await this.sendMessage('❌ Error al obtener el estado. Intenta nuevamente.', chatId);
+        }
+    }
+
+    // Handle /limpiar command
+    async handleLimpiarCommand(phone, chatId) {
+        try {
+            const principalNum = parseInt(phone);
+            if (isNaN(principalNum) || principalNum < 1 || principalNum > 26) {
+                await this.sendMessage('❌ Número de principal inválido. Usa un número entre 1 y 26.', chatId);
+                return;
+            }
+
+            const fsPromises = require('fs').promises;
+            const dataPath = path.join(__dirname, 'data', 'principales-tiempo-real.json');
+            let data = {};
+
+            try {
+                const fileContent = await fsPromises.readFile(dataPath, 'utf-8');
+                data = JSON.parse(fileContent);
+            } catch (error) {
+                // File doesn't exist or is empty
+            }
+
+            // Remove principal from data
+            delete data[principalNum];
+
+            // Save
+            await fsPromises.writeFile(dataPath, JSON.stringify(data, null, 2));
+
+            await this.sendMessage(`🧹 <b>Principal #${principalNum} limpiado</b>\n\nEstado: ⚪ Sin chequear`, chatId);
+
+        } catch (error) {
+            console.error('Error in handleLimpiarCommand:', error);
+            await this.sendMessage('❌ Error al limpiar el principal. Intenta nuevamente.', chatId);
+        }
+    }
+
+    // Helper function to get time ago
+    getTimeAgo(timestamp) {
+        if (!timestamp) return 'nunca';
+
+        const now = new Date();
+        const then = new Date(timestamp);
+        const diffMs = now - then;
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 1) return 'hace menos de 1 minuto';
+        if (diffMins === 1) return 'hace 1 minuto';
+        if (diffMins < 60) return `hace ${diffMins} minutos`;
+
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours === 1) return 'hace 1 hora';
+        if (diffHours < 24) return `hace ${diffHours} horas`;
+
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays === 1) return 'hace 1 día';
+        return `hace ${diffDays} días`;
     }
 
     // Send message to Telegram

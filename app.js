@@ -13,6 +13,7 @@ let currentModal = null;
 let currentShift = 'all';
 let currentTheme = 'dark';
 let currentView = 'grid'; // View mode: grid, list, compact, expanded
+let mainSection = 'chequeos'; // Navigation section: chequeos, tiempo-real
 
 
 // ============================================
@@ -1156,6 +1157,14 @@ function setupEventListeners() {
     // Send report button
     document.getElementById('sendReportBtn').addEventListener('click', sendToDiscord);
 
+    // Tiempo Real button
+    const tiempoRealBtn = document.getElementById('tiempoRealBtn');
+    if (tiempoRealBtn) {
+        tiempoRealBtn.addEventListener('click', () => {
+            switchView('tiempo-real');
+        });
+    }
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1260,6 +1269,62 @@ function renderHistoryTimeline(history) {
         `;
         timeline.appendChild(item);
     });
+}
+
+// ============================================
+// NAVIGATION & VIEW SWITCHING
+// ============================================
+
+function switchView(section) {
+    const chequeosSection = document.getElementById('mainContent') || document.querySelector('.container');
+    const introSection = document.querySelector('.intro-section');
+    const infoSection = document.querySelector('.info-section');
+    const tiempoRealSection = document.getElementById('tiempoRealSection');
+    const tiempoRealBtn = document.getElementById('tiempoRealBtn');
+
+    if (section === 'tiempo-real') {
+        // Hide Chequeos
+        if (chequeosSection) chequeosSection.style.display = 'none';
+        if (introSection) introSection.style.display = 'none';
+        if (infoSection) infoSection.style.display = 'none';
+
+        // Show Tiempo Real
+        if (tiempoRealSection) {
+            tiempoRealSection.style.display = 'block';
+            initTiempoReal(); // Function from tiempo-real.js
+        }
+
+        // Update Button
+        if (tiempoRealBtn) {
+            tiempoRealBtn.innerHTML = '<span class="icon">📊</span> Ver Chequeos';
+            tiempoRealBtn.classList.remove('btn-accent');
+            tiempoRealBtn.classList.add('btn-secondary');
+            tiempoRealBtn.onclick = () => switchView('chequeos');
+        }
+
+        mainSection = 'tiempo-real';
+    } else {
+        // Show Chequeos
+        if (chequeosSection) chequeosSection.style.display = 'block';
+        if (introSection) introSection.style.display = 'block';
+        if (infoSection) infoSection.style.display = 'block';
+
+        // Hide Tiempo Real
+        if (tiempoRealSection) {
+            tiempoRealSection.style.display = 'none';
+            destroyTiempoReal(); // Function from tiempo-real.js
+        }
+
+        // Update Button
+        if (tiempoRealBtn) {
+            tiempoRealBtn.innerHTML = '<span class="icon">🔴</span> Tiempo Real';
+            tiempoRealBtn.classList.remove('btn-secondary');
+            tiempoRealBtn.classList.add('btn-accent');
+            tiempoRealBtn.onclick = () => switchView('tiempo-real');
+        }
+
+        mainSection = 'chequeos';
+    }
 }
 
 // ============================================
