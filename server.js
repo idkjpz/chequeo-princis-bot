@@ -12,6 +12,38 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 
+// Initialize users on startup (important for Railway/production)
+async function initializeUsers() {
+    const dataDir = path.join(__dirname, 'data');
+    const usersFile = path.join(dataDir, 'users.json');
+
+    try {
+        await fs.mkdir(dataDir, { recursive: true });
+
+        try {
+            await fs.access(usersFile);
+            console.log('✅ users.json exists');
+        } catch {
+            const bcrypt = require('bcryptjs');
+            const adminPassword = await bcrypt.hash('admin123', 10);
+            const defaultUsers = [{
+                username: 'admin',
+                password: adminPassword,
+                role: 'admin',
+                assignedShifts: ['morning', 'afternoon', 'night'],
+                createdAt: new Date().toISOString()
+            }];
+            await fs.writeFile(usersFile, JSON.stringify(defaultUsers, null, 2));
+            console.log('✅ Created default admin user (username: admin, password: admin123)');
+        }
+    } catch (error) {
+        console.error('❌ Error initializing users:', error);
+    }
+}
+
+// Run initialization
+initializeUsers();
+
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
