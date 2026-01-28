@@ -1,0 +1,32 @@
+{
+  "name": "phone-monitoring-system",
+  "version": "1.0.0",
+  "description": "Sistema de monitoreo de teléfonos principales con integración a Discord",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "monitoring",
+    "discord",
+    "webhook",
+    "phone-tracking"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "form-data": "^4.0.5",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "node-cron": "^3.0.3"
+  }
+}

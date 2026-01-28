@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Principales - Sistema de Monitoreo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body data-theme="dark">
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>📱 Control de Principales</h1>
+                <div class="header-actions">
+                    <div class="theme-selector-container">
+                        <button id="themeToggle" class="btn-icon theme-toggle-btn" title="Cambiar tema">
+                            <span class="theme-icon">🌙</span>
+                        </button>
+                        <div id="themeDropdown" class="theme-dropdown">
+                            <div class="theme-option" data-theme="dark">
+                                <span class="theme-emoji">🌙</span>
+                                <span>Dark</span>
+                            </div>
+                            <div class="theme-option" data-theme="light">
+                                <span class="theme-emoji">☀️</span>
+                                <span>Light</span>
+                            </div>
+                            <div class="theme-option" data-theme="ocean">
+                                <span class="theme-emoji">🌊</span>
+                                <span>Blue Ocean</span>
+                            </div>
+                            <div class="theme-option" data-theme="purple">
+                                <span class="theme-emoji">💜</span>
+                                <span>Purple Dream</span>
+                            </div>
+                            <div class="theme-option" data-theme="forest">
+                                <span class="theme-emoji">🌲</span>
+                                <span>Forest Green</span>
+                            </div>
+                            <div class="theme-option" data-theme="sunset">
+                                <span class="theme-emoji">🌅</span>
+                                <span>Sunset Red</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="usersAdminBtn" class="btn-header admin-only" title="Gestión de Usuarios"
+                        style="display: none;">
+                        <span class="icon">👥</span>
+                        <span>Usuarios</span>
+                    </button>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="control-group">
+                    <div class="shift-selector">
+                        <label for="shiftFilter">Turno:</label>
+                        <select id="shiftFilter">
+                            <option value="all">Todos los turnos</option>
+                            <option value="morning">🌅 Mañana</option>
+                            <option value="afternoon">☀️ Tarde</option>
+                            <option value="night">🌙 Noche</option>
+                        </select>
+                    </div>
+                    <div class="time-selector" id="timeSelector" style="display: none;">
+                        <label for="timeFilter">Horario:</label>
+                        <select id="timeFilter">
+                            <option value="all">Todos los horarios</option>
+                        </select>
+                    </div>
+                    <div class="date-filter">
+                        <label for="dateFilter">Fecha:</label>
+                        <input type="date" id="dateFilter">
+                    </div>
+                </div>
+                <div class="action-group">
+                    <button id="clearAllBtn" class="btn-secondary" title="Desmarcar todos">
+                        <span class="icon">🗑️</span>
+                        Limpiar Todo
+                    </button>
+                    <button id="sendReportBtn" class="btn-primary">
+                        <span class="icon">📤</span>
+                        Enviar Informe a Discord
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="info-section">
+            <div class="status-legend">
+                <h3>Estados:</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <span class="status-badge active">●</span> Activo
+                    </div>
+                    <div class="legend-item">
+                        <span class="status-badge disconnected">●</span> Desconectado
+                    </div>
+                    <div class="legend-item">
+                        <span class="status-badge crm">●</span> En CRM
+                    </div>
+                    <div class="legend-item">
+                        <span class="status-badge server">●</span> En Server
+                    </div>
+                    <div class="legend-item">
+                        <span class="status-badge none">○</span> Sin Chequear
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Morning Section -->
+        <section class="time-section morning">
+            <div class="section-header">
+                <h2>🌅 MAÑANA</h2>
+            </div>
+            <div class="time-grid">
+                <div class="time-column">
+                    <div class="time-label">6:30</div>
+                    <div id="phones-morning-0630" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">8:00</div>
+                    <div id="phones-morning-0800" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">10:00</div>
+                    <div id="phones-morning-1000" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">12:00</div>
+                    <div id="phones-morning-1200" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">14:00</div>
+                    <div id="phones-morning-1400" class="phones-container"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Afternoon Section -->
+        <section class="time-section afternoon">
+            <div class="section-header">
+                <h2>☀️ TARDE</h2>
+            </div>
+            <div class="time-grid">
+                <div class="time-column">
+                    <div class="time-label">14:30</div>
+                    <div id="phones-afternoon-1430" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">16:00</div>
+                    <div id="phones-afternoon-1600" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">18:00</div>
+                    <div id="phones-afternoon-1800" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">20:00</div>
+                    <div id="phones-afternoon-2000" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">22:00</div>
+                    <div id="phones-afternoon-2200" class="phones-container"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Night Section -->
+        <section class="time-section night">
+            <div class="section-header">
+                <h2>🌙 NOCHE</h2>
+            </div>
+            <div class="time-grid">
+                <div class="time-column">
+                    <div class="time-label">22:30</div>
+                    <div id="phones-night-2230" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">0:00</div>
+                    <div id="phones-night-0000" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">2:00</div>
+                    <div id="phones-night-0200" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">4:30</div>
+                    <div id="phones-night-0430" class="phones-container"></div>
+                </div>
+                <div class="time-column">
+                    <div class="time-label">6:00</div>
+                    <div id="phones-night-0600" class="phones-container"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notes Section -->
+        <section class="notes-section">
+            <h2>📝 Notas y Observaciones</h2>
+            <textarea id="notesInput" placeholder="Ingrese aclaraciones o novedades del día..."></textarea>
+            <div class="notes-actions">
+                <button id="saveNotesBtn" class="btn-secondary">Guardar Notas</button>
+                <button id="clearNotesBtn" class="btn-secondary">Limpiar</button>
+            </div>
+        </section>
+
+        <!-- Notes Modal -->
+        <div id="notesModal" class="modal">
+            <div class="modal-content notes-modal-content">
+                <span class="close" id="notesClose">&times;</span>
+                <h2 id="notesTitle">📝 Notas - Principal 1</h2>
+                <textarea id="notesTextarea" class="notes-textarea"
+                    placeholder="Escribe observaciones o notas sobre este principal..."></textarea>
+                <div class="notes-actions">
+                    <button id="notesSaveBtn" class="btn-primary">💾 Guardar</button>
+                    <button id="notesCancelBtn" class="btn-secondary">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Modal -->
+        <div id="statusModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Seleccionar Estado</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p id="modalPhoneInfo"></p>
+                    <div class="status-options">
+                        <button class="status-btn" data-status="activo">
+                            <span class="status-badge active">●</span> Activo
+                        </button>
+                        <button class="status-btn" data-status="desconectado">
+                            <span class="status-badge disconnected">●</span> Desconectado
+                        </button>
+                        <button class="status-btn" data-status="crm">
+                            <span class="status-badge crm">●</span> En CRM
+                        </button>
+                        <button class="status-btn" data-status="server">
+                            <span class="status-badge server">●</span> En Server
+                        </button>
+                        <button class="status-btn" data-status="none">
+                            <span class="status-badge none">○</span> Sin Chequear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Modal -->
+        <div id="historyModal" class="modal">
+            <div class="modal-content history-modal-content">
+                <div class="modal-header">
+                    <h3 id="historyTitle">📜 Historial - Principal 1</h3>
+                    <span class="close" id="historyClose">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="historyTimeline" class="history-timeline">
+                        <!-- History items will be rendered here -->
+                        <div class="loading-history">Cargando historial...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Modal -->
+        <div id="usersModal" class="modal">
+            <div class="modal-content users-modal-content">
+                <div class="modal-header">
+                    <h3>👥 Gestión de Usuarios</h3>
+                    <span class="close" id="usersClose">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="users-actions">
+                        <button id="addNewUserBtn" class="btn-primary">➕ Nuevo Usuario</button>
+                    </div>
+                    <div class="users-list-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Rol</th>
+                                    <th>Turnos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Users will be listed here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit User Modal -->
+        <div id="userFormModal" class="modal">
+            <div class="modal-content user-form-content">
+                <div class="modal-header">
+                    <h3 id="userFormTitle">Crear Nuevo Usuario</h3>
+                    <span class="close" id="userFormClose">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <div class="form-group">
+                            <label>Nombre de Usuario</label>
+                            <input type="text" id="userUsername" required>
+                        </div>
+                        <div class="form-group" id="passwordGroup">
+                            <label>Contraseña</label>
+                            <input type="password" id="userPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Rol</label>
+                            <select id="userRole">
+                                <option value="operador">Operador</option>
+                                <option value="admin">Administrador</option>
+                                <option value="viewer">Observador</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Turnos Asignados</label>
+                            <div class="shifts-selection">
+                                <label class="shift-option">
+                                    <input type="checkbox" value="morning" checked>
+                                    <div class="shift-card">
+                                        <span class="shift-icon">🌅</span>
+                                        <span class="shift-name">Mañana</span>
+                                    </div>
+                                </label>
+                                <label class="shift-option">
+                                    <input type="checkbox" value="afternoon" checked>
+                                    <div class="shift-card">
+                                        <span class="shift-icon">☀️</span>
+                                        <span class="shift-name">Tarde</span>
+                                    </div>
+                                </label>
+                                <label class="shift-option">
+                                    <input type="checkbox" value="night" checked>
+                                    <div class="shift-card">
+                                        <span class="shift-icon">🌙</span>
+                                        <span class="shift-name">Noche</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">Guardar</button>
+                            <button type="button" id="cancelUserBtn" class="btn-secondary">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Chat Button -->
+    <button id="chatToggleBtn" class="floating-chat-btn" title="Abrir chat de Telegram">
+        💬
+        <span id="chatBadge" class="floating-chat-badge" style="display: none;">0</span>
+    </button>
+
+    <!-- Name Prompt Modal -->
+    <div id="namePromptModal" class="name-prompt-modal">
+        <div class="name-prompt-content">
+            <h3>💬 Bienvenido al Chat</h3>
+            <p>Por favor, ingresa tu nombre o apodo:</p>
+            <input type="text" id="nameInput" class="name-input" placeholder="Tu nombre..." maxlength="20">
+            <div class="name-prompt-buttons">
+                <button id="nameSubmitBtn" class="btn-primary">Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div id="chatPanel" class="chat-panel">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-status-dot"></div>
+                <h3>💬 Chat de Telegram</h3>
+            </div>
+            <button id="chatCloseBtn" class="chat-close-btn">✕</button>
+        </div>
+        <div id="chatMessages" class="chat-messages">
+            <!-- Messages will be rendered here -->
+        </div>
+        <!-- Reply Preview -->
+        <div id="chatReplyPreview" class="chat-reply-preview">
+            <div class="reply-preview-content">
+                <div class="reply-preview-line"></div>
+                <div class="reply-preview-details">
+                    <div id="replyPreviewSender" class="reply-preview-sender"></div>
+                    <div id="replyPreviewText" class="reply-preview-text"></div>
+                </div>
+                <button id="cancelReplyBtn" class="cancel-reply-btn">✕</button>
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input type="file" id="chatFileInput" accept="image/*,.pdf,.doc,.docx,.txt,.zip" style="display: none;">
+            <button id="chatFileBtn" class="chat-file-btn" title="Adjuntar archivo">📎</button>
+            <input type="text" id="chatInput" class="chat-input" placeholder="Escribe un mensaje...">
+            <button id="chatSendBtn" class="chat-send-btn">📤</button>
+        </div>
+    </div>
+
+    <!-- File Preview Modal -->
+    <div id="filePreviewModal" class="modal">
+        <div class="modal-content file-preview-content">
+            <span class="close" id="filePreviewClose">&times;</span>
+            <h2>📎 Enviar Archivo</h2>
+            <div id="filePreviewContainer" class="file-preview-container"></div>
+            <input type="text" id="fileCaptionInput" class="file-caption-input"
+                placeholder="Agregar un mensaje (opcional)...">
+            <div class="file-preview-actions">
+                <button id="fileSendBtn" class="btn-primary">📤 Enviar</button>
+                <button id="fileCancelBtn" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth-client.js"></script>
+    <script src="themes.js"></script>
+    <script src="chat-functions.js"></script>
+    <script src="app.js"></script>
+    <script src="app-admin.js"></script>
+</body>
+
+</html>

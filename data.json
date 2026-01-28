@@ -1,0 +1,39 @@
+{
+  "2026-01-28": {
+    "2026-01-28_1_morning_0630 ": {
+      "phone": 1,
+      "period": "morning",
+      "time": "0630",
+      "status": "activo",
+      "timestamp": "2026-01-28T06:12:34.879Z"
+    },
+    "2026-01-28_1_afternoon_1800 ": {
+      "phone": 1,
+      "period": "afternoon",
+      "time": "1800",
+      "status": "activo",
+      "timestamp": "2026-01-28T06:59:33.781Z"
+    },
+    "2026-01-28_2_afternoon_1800 ": {
+      "phone": 2,
+      "period": "afternoon",
+      "time": "1800",
+      "status": "activo",
+      "timestamp": "2026-01-28T07:21:39.781Z"
+    },
+    "2026-01-28_3_afternoon_1800 ": {
+      "phone": 3,
+      "period": "afternoon",
+      "time": "1800",
+      "status": "server",
+      "timestamp": "2026-01-28T06:59:37.664Z"
+    },
+    "2026-01-28_12_afternoon_1800 ": {
+      "phone": 12,
+      "period": "afternoon",
+      "time": "1800",
+      "status": "desconectado",
+      "timestamp": "2026-01-28T13:55:51.605Z"
+    }
+  }
+}

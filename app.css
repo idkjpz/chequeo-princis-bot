@@ -1,0 +1,153 @@
+/* Reply Functionality */
+.chat-message {
+    position: relative;
+    max-width: 85%;
+    margin-bottom: 1.5rem;
+}
+
+.chat-message-reply-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: all 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+}
+
+.chat-message.received .chat-message-reply-btn {
+    right: -35px;
+}
+
+.chat-message.sent .chat-message-reply-btn {
+    left: -35px;
+}
+
+.chat-message:hover .chat-message-reply-btn {
+    opacity: 1;
+}
+
+/* Replied message content inside a bubble */
+.chat-message-reply-ref {
+    background: rgba(0, 0, 0, 0.05);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.chat-message.received .chat-message-reply-ref {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.chat-message-reply-ref:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.reply-ref-sender {
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.2rem;
+}
+
+.reply-ref-text {
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+/* Reply Preview above input */
+.chat-reply-preview {
+    display: none;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    transition: all 0.3s;
+}
+
+.chat-reply-preview.active {
+    display: block;
+}
+
+.reply-preview-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+}
+
+.reply-preview-line {
+    width: 4px;
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    position: absolute;
+    left: 0;
+}
+
+.reply-preview-details {
+    flex: 1;
+    padding-left: 10px;
+    overflow: hidden;
+}
+
+.reply-preview-sender {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 0.85rem;
+}
+
+.reply-preview-text {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cancel-reply-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.cancel-reply-btn:hover {
+    color: var(--danger);
+}
+
+/* Highlight target message when clicking a reply */
+@keyframes highlightfade {
+    0% {
+        background: var(--accent-faint, rgba(0, 120, 215, 0.3));
+    }
+
+    100% {
+        background: transparent;
+    }
+}
+
+.highlight-message .chat-message-bubble {
+    animation: highlightfade 2s ease-in-out;
+}
