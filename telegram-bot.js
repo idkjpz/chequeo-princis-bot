@@ -11,6 +11,7 @@ class TelegramBot {
         this.baseUrl = `https://api.telegram.org/bot${token}`;
         this.offset = 0;
         this.messagesFile = path.join(__dirname, 'data', 'messages.json');
+        this.reportsFile = path.join(__dirname, 'data', 'active-reports.json');
         this.isPolling = false;
         console.log('✅ TelegramBot constructor completed');
     }
@@ -39,6 +40,16 @@ class TelegramBot {
                 console.log('✅ Messages file created');
             }
 
+            // Initialize reports file if it doesn't exist
+            console.log('🔧 Initializing reports file...');
+            try {
+                await fsPromises.access(this.reportsFile);
+                console.log('✅ Reports file already exists');
+            } catch {
+                await fsPromises.writeFile(this.reportsFile, JSON.stringify([]));
+                console.log('✅ Reports file created');
+            }
+
             console.log('✅ Telegram bot initialized');
             await this.setBotCommands();
             this.isPolling = true;
@@ -65,7 +76,9 @@ class TelegramBot {
             { command: 'estado', description: '📊 Tiempo Real: Ver estados' },
             { command: 'limpiar', description: '🧹 Tiempo Real: Limpiar estado' },
             { command: 'status', description: '📈 Resumen de chequeos del día' },
-            { command: 'reporte', description: '🚨 Reportar a Discord' }
+            { command: 'reporte', description: '🚨 Reportar a Discord y Guardar' },
+            { command: 'ver_reportes', description: '📋 Ver todos los reportes actuales' },
+            { command: 'limpiar_reportes', description: '🗑️ Borrar todos los reportes' }
         ];
 
         try {
@@ -206,7 +219,9 @@ class TelegramBot {
                     `/limpiar [número] - Limpiar estado de un principal\n\n` +
                     `<b>📊 Otros:</b>\n` +
                     `/status - Ver resumen de chequeos del día\n` +
-                    `/reporte [número] [mensaje] - Reportar a Discord\n` +
+                    `/reporte [número] [mensaje] - Reportar a Discord y Guardar\n` +
+                    `/ver_reportes - Ver lista de reportes actuales\n` +
+                    `/limpiar_reportes - Borrar todos los reportes grabados\n` +
                     `/help - Mostrar este mensaje`;
                 await this.sendMessage(helpText, chatId);
                 break;
@@ -269,6 +284,14 @@ class TelegramBot {
                         '<b>Ejemplo:</b>\n' +
                         '• /limpiar 17', chatId);
                 }
+                break;
+
+            case '/ver_reportes':
+                await this.handleVerReportesCommand(chatId);
+                break;
+
+            case '/limpiar_reportes':
+                await this.handleLimpiarReportesCommand(chatId);
                 break;
 
             default:
@@ -423,11 +446,73 @@ class TelegramBot {
                 embeds: [embed]
             });
 
-            await this.sendMessage(`✅ Reporte del Principal #${principalNum} enviado a Discord correctamente.`, chatId);
+            // Save report locally
+            await this.saveActiveReport({
+                principal: principalNum,
+                mensaje: mensaje,
+                estado: estadoActual,
+                timestamp: timestamp,
+                user: 'Telegram'
+            });
+
+            await this.sendMessage(`✅ Reporte del Principal #${principalNum} enviado a Discord y guardado correctamente.`, chatId);
 
         } catch (error) {
             console.error('Error in handleReporteCommand:', error);
             await this.sendMessage('❌ Error al enviar el reporte. Intenta nuevamente.', chatId);
+        }
+    }
+
+    // Save report to active-reports.json
+    async saveActiveReport(reportData) {
+        try {
+            const data = await fsPromises.readFile(this.reportsFile, 'utf-8');
+            const reports = JSON.parse(data);
+            reports.push({
+                id: Date.now(),
+                ...reportData
+            });
+            await fsPromises.writeFile(this.reportsFile, JSON.stringify(reports, null, 2));
+        } catch (error) {
+            console.error('Error saving active report:', error);
+        }
+    }
+
+    // Handle /ver_reportes command
+    async handleVerReportesCommand(chatId) {
+        try {
+            const data = await fsPromises.readFile(this.reportsFile, 'utf-8');
+            const reports = JSON.parse(data);
+
+            if (reports.length === 0) {
+                await this.sendMessage('📋 No hay reportes activos registrados.', chatId);
+                return;
+            }
+
+            let message = '📋 <b>Lista de Reportes Activos:</b>\n\n';
+            reports.forEach((r, index) => {
+                const timeStr = new Date(r.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                message += `<b>${index + 1}. Principal #${r.principal}</b>\n`;
+                message += `   🔸 Estado: ${r.estado}\n`;
+                message += `   📝 ${r.mensaje}\n`;
+                message += `   🕒 ${timeStr}\n\n`;
+            });
+
+            await this.sendMessage(message, chatId);
+        } catch (error) {
+            console.error('Error in handleVerReportesCommand:', error);
+            await this.sendMessage('❌ Error al leer los reportes.', chatId);
+        }
+    }
+
+    // Handle /limpiar_reportes command
+    async handleLimpiarReportesCommand(chatId) {
+        try {
+            await fsPromises.writeFile(this.reportsFile, JSON.stringify([]));
+            await this.sendMessage('🗑️ Todos los reportes han sido borrados correctamente.', chatId);
+        } catch (error) {
+            console.error('Error in handleLimpiarReportesCommand:', error);
+            await this.sendMessage('❌ Error al borrar los reportes.', chatId);
         }
     }
 
